@@ -1,0 +1,72 @@
+import { useState } from "react";
+import { createGrade } from "../../services/gradeService";
+
+const AddEditGradeModal = ({ students, onClose, onSuccess }) => {
+  const [formData, setFormData] = useState({
+    student: "",
+    subject: "",
+    examType: "",
+    score: "",
+    term: "",
+    class: "",
+  });
+
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await createGrade(formData);
+    onSuccess();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-6 rounded-lg w-full max-w-lg space-y-4"
+      >
+        <h2 className="text-xl font-bold text-center">Ajouter une note</h2>
+
+        <select name="student" required className="input" onChange={handleChange}>
+          <option value="">Élève</option>
+          {students.map(s => (
+            <option key={s._id} value={s._id}>
+              {s.firstName} {s.lastName}
+            </option>
+          ))}
+        </select>
+
+        <input name="subject" placeholder="Matière" className="input" required onChange={handleChange} />
+
+        <select name="examType" className="input" required onChange={handleChange}>
+          <option value="">Type</option>
+          <option>Devoir</option>
+          <option>Composition 1</option>
+          <option>Composition 2</option>
+          <option>Examen final</option>
+        </select>
+
+        <input name="score" type="number" max="20" className="input" required onChange={handleChange} />
+
+        <select name="term" className="input" required onChange={handleChange}>
+          <option value="">Trimestre</option>
+          <option>Trimestre 1</option>
+          <option>Trimestre 2</option>
+          <option>Trimestre 3</option>
+        </select>
+
+        <input name="class" placeholder="Classe" className="input" required onChange={handleChange} />
+
+        <div className="flex justify-end gap-3">
+          <button type="button" onClick={onClose}>Annuler</button>
+          <button className="bg-blue-600 text-white px-4 py-2 rounded">
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default AddEditGradeModal;
