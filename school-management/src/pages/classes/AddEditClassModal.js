@@ -1,10 +1,9 @@
 import { useState } from "react";
-import {
-  createClass,
-  updateClass,
-} from "../../services/classService";
+import { createClass, updateClass } from "../../services/classService";
+import toast from "react-hot-toast";
 
 const AddEditClassModal = ({ classData, onClose, onSuccess }) => {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: classData?.name || "",
     level: classData?.level || "CM1",
@@ -14,22 +13,25 @@ const AddEditClassModal = ({ classData, onClose, onSuccess }) => {
     status: classData?.status || "Active",
   });
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
     try {
       if (classData) {
         await updateClass(classData._id, formData);
+        toast.success("Classe modifiée avec succès");
       } else {
         await createClass(formData);
+        toast.success("Classe ajoutée avec succès");
       }
       onSuccess();
     } catch {
-      alert("Erreur lors de l'enregistrement");
+      toast.error("Erreur lors de l'enregistrement");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -107,9 +109,10 @@ const AddEditClassModal = ({ classData, onClose, onSuccess }) => {
             </button>
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              disabled={loading}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              Enregistrer
+              {loading ? "Enregistrement..." : "Enregistrer"}
             </button>
           </div>
         </form>

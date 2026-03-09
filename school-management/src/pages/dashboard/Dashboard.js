@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+import { getCurrentUser } from "../../services/authService";
+import toast from "react-hot-toast";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({});
-  const role = localStorage.getItem("role");
+  const user = getCurrentUser();
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -11,10 +13,9 @@ const Dashboard = () => {
         const res = await api.get("/dashboard/stats");
         setStats(res.data.data);
       } catch (error) {
-        console.error("Erreur dashboard", error);
+        toast.error("Erreur chargement du tableau de bord");
       }
     };
-
     loadDashboard();
   }, []);
 
@@ -23,7 +24,7 @@ const Dashboard = () => {
       <h1 className="text-2xl font-bold mb-6">Tableau de bord</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {(role === "Admin" || role === "Enseignant") && (
+        {(user?.role === "Admin" || user?.role === "Enseignant") && (
           <StatCard
             title="Élèves"
             value={stats.totalStudents || 0}
@@ -31,7 +32,7 @@ const Dashboard = () => {
           />
         )}
 
-        {role === "Admin" && (
+        {user?.role === "Admin" && (
           <StatCard
             title="Enseignants"
             value={stats.totalTeachers || 0}
@@ -39,7 +40,7 @@ const Dashboard = () => {
           />
         )}
 
-        {role === "Admin" && (
+        {user?.role === "Admin" && (
           <StatCard
             title="Classes"
             value={stats.totalClasses || 0}
@@ -47,7 +48,7 @@ const Dashboard = () => {
           />
         )}
 
-        {(role === "Admin" || role === "Comptable") && (
+        {(user?.role === "Admin" || user?.role === "Comptable") && (
           <StatCard
             title="Revenus"
             value={`${(stats.totalRevenue || 0).toLocaleString()} FCFA`}
@@ -55,7 +56,7 @@ const Dashboard = () => {
           />
         )}
 
-        {role === "Enseignant" && (
+        {user?.role === "Enseignant" && (
           <StatCard
             title="Présences aujourd’hui"
             value={stats.attendanceToday || 0}

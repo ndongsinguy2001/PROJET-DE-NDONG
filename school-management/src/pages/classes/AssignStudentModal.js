@@ -1,54 +1,37 @@
 import { useEffect, useState } from "react";
 import { getStudents } from "../../services/studentService";
 import { addStudentToClass } from "../../services/classService";
+import toast from "react-hot-toast";
 
 const AssignStudentModal = ({ classId, onClose, onSuccess }) => {
   const [students, setStudents] = useState([]);
   const [studentId, setStudentId] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchStudents = async () => {
       try {
         const res = await getStudents();
-        const data = Array.isArray(res.data?.data) ? res.data.data : [];
-        setStudents(data.filter((s) => s.role === "Eleve"));
+        setStudents(res.data.data || []);
       } catch {
-        setError("Erreur chargement élèves");
+        toast.error("Erreur chargement élèves");
       }
     };
-
     fetchStudents();
   }, []);
 
   const handleAssign = async () => {
-    setError("");
-
-    if (!classId) {
-      setError("Classe invalide");
-      return;
-    }
-
     if (!studentId) {
-      setError("Veuillez sélectionner un élève");
+      toast.error("Veuillez sélectionner un élève");
       return;
     }
-
+    setLoading(true);
     try {
-      setLoading(true);
-
-      console.log("ASSIGN:", {
-        classId,
-        studentId,
-      });
-
-      await addStudentToClass(classId, studentId );
-
+      await addStudentToClass(classId, studentId);
+      toast.success("Élève affecté avec succès");
       onSuccess();
-    } catch (err) {
-      console.error("BACKEND ERROR:", err.response?.data);
-      setError("Erreur lors de l'affectation");
+    } catch {
+      toast.error("Erreur lors de l'affectation");
     } finally {
       setLoading(false);
     }
@@ -58,8 +41,6 @@ const AssignStudentModal = ({ classId, onClose, onSuccess }) => {
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-xl w-full max-w-md">
         <h2 className="text-xl font-bold mb-4">Affecter un élève</h2>
-
-        {error && <p className="text-red-600 mb-3">{error}</p>}
 
         <select
           className="w-full border p-2 rounded mb-4"
@@ -81,7 +62,7 @@ const AssignStudentModal = ({ classId, onClose, onSuccess }) => {
           <button
             onClick={handleAssign}
             disabled={loading}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
+            className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
           >
             {loading ? "Affectation..." : "Valider"}
           </button>

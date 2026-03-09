@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { createStudent, updateStudent } from "../../services/studentService";
 import { getClasses } from "../../services/classService";
+import toast from "react-hot-toast";
 
 const AddEditStudentModal = ({ student, onClose, onSuccess }) => {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
   const [formData, setFormData] = useState({
     firstName: student?.firstName || "",
     lastName: student?.lastName || "",
@@ -14,60 +13,41 @@ const AddEditStudentModal = ({ student, onClose, onSuccess }) => {
     password: "",
     matricule: student?.matricule || "",
     gender: student?.gender || "",
-    dateOfBirth: student?.dateOfBirth
-      ? student.dateOfBirth.substring(0, 10)
-      : "",
+    dateOfBirth: student?.dateOfBirth?.substring(0, 10) || "",
     parentPhone: student?.parentPhone || "",
     address: student?.address || "",
-    studentClass: student?.studentClass || "",
+    studentClass: student?.studentClass?._id || student?.studentClass || "",
   });
 
-  
-  // CHARGER LES CLASSES
-  
   useEffect(() => {
     const fetchClasses = async () => {
       try {
         const res = await getClasses();
-
-        //  STRUCTURE BACKEND : { success, count, data }
         setClasses(res.data.data || []);
-      } catch (err) {
-        console.error("Erreur chargement classes :", err);
-        setClasses([]);
+      } catch {
+        toast.error("Erreur lors du chargement des classes");
       }
     };
-
     fetchClasses();
   }, []);
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
-  
-  // SUBMIT
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-
+    setLoading(true);
     try {
-      setLoading(true);
-
       if (student) {
         await updateStudent(student._id, formData);
+        toast.success("Élève modifié avec succès");
       } else {
-        await createStudent({
-          ...formData,
-          role: "Eleve", //  OBLIGATOIRE
-        });
+        await createStudent({ ...formData, role: "Eleve" });
+        toast.success("Élève ajouté avec succès");
       }
-
       onSuccess();
     } catch (err) {
-      console.error(err.response?.data || err.message);
-      setError("Erreur lors de l'enregistrement de l'élève");
+      toast.error(err.response?.data?.message || "Erreur lors de l'enregistrement");
     } finally {
       setLoading(false);
     }
@@ -75,23 +55,17 @@ const AddEditStudentModal = ({ student, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-xl w-full max-w-xl">
+      <div className="bg-white p-6 rounded-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-bold mb-4 text-center">
-          {student ? "Modifier l’élève" : "Ajouter un élève"}
+          {student ? "Modifier l'élève" : "Ajouter un élève"}
         </h2>
-
-        {error && (
-          <p className="text-red-600 mb-3 text-center">{error}</p>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* NOMS */}
           <div className="grid grid-cols-2 gap-4">
             <input
               name="firstName"
               placeholder="Prénom"
               required
-              className="input"
+              className="border p-2 rounded"
               value={formData.firstName}
               onChange={handleChange}
             />
@@ -99,20 +73,19 @@ const AddEditStudentModal = ({ student, onClose, onSuccess }) => {
               name="lastName"
               placeholder="Nom"
               required
-              className="input"
+              className="border p-2 rounded"
               value={formData.lastName}
               onChange={handleChange}
             />
           </div>
 
-          {/* EMAIL + PASSWORD */}
           <div className="grid grid-cols-2 gap-4">
             <input
               type="email"
               name="email"
               placeholder="Email"
               required
-              className="input"
+              className="border p-2 rounded"
               value={formData.email}
               onChange={handleChange}
             />
@@ -122,27 +95,26 @@ const AddEditStudentModal = ({ student, onClose, onSuccess }) => {
                 name="password"
                 placeholder="Mot de passe"
                 required
-                className="input"
+                className="border p-2 rounded"
                 value={formData.password}
                 onChange={handleChange}
               />
             )}
           </div>
 
-          {/* MATRICULE + GENRE */}
           <div className="grid grid-cols-2 gap-4">
             <input
               name="matricule"
               placeholder="Matricule"
               required
-              className="input"
+              className="border p-2 rounded"
               value={formData.matricule}
               onChange={handleChange}
             />
             <select
               name="gender"
               required
-              className="input"
+              className="border p-2 rounded"
               value={formData.gender}
               onChange={handleChange}
             >
@@ -152,41 +124,39 @@ const AddEditStudentModal = ({ student, onClose, onSuccess }) => {
             </select>
           </div>
 
-          {/* DATE */}
           <input
             type="date"
             name="dateOfBirth"
             required
-            className="input"
+            className="border p-2 rounded w-full"
             value={formData.dateOfBirth}
             onChange={handleChange}
           />
 
-          {/* PARENT + ADRESSE */}
           <input
             name="parentPhone"
             placeholder="Téléphone parent"
             required
-            className="input"
+            className="border p-2 rounded w-full"
             value={formData.parentPhone}
             onChange={handleChange}
           />
+
           <input
             name="address"
             placeholder="Adresse"
             required
-            className="input"
+            className="border p-2 rounded w-full"
             value={formData.address}
             onChange={handleChange}
           />
 
-          {/*  CLASSE  */}
           <select
             name="studentClass"
             value={formData.studentClass}
             onChange={handleChange}
             required
-            className="input"
+            className="border p-2 rounded w-full"
           >
             <option value="">Sélectionner une classe</option>
             {classes.map((c) => (
@@ -196,7 +166,6 @@ const AddEditStudentModal = ({ student, onClose, onSuccess }) => {
             ))}
           </select>
 
-          {/* ACTIONS */}
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
@@ -208,7 +177,7 @@ const AddEditStudentModal = ({ student, onClose, onSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white px-5 py-2 rounded"
+              className="bg-blue-600 text-white px-5 py-2 rounded disabled:opacity-50"
             >
               {loading ? "Enregistrement..." : "Enregistrer"}
             </button>

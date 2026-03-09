@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   getGrades,
@@ -8,6 +7,8 @@ import {
 import { getStudents } from "../../services/studentService";
 import { getClasses } from "../../services/classService";
 import AddEditGradeModal from "./AddEditGradeModal";
+import { getCurrentUser } from "../../services/authService";
+import toast from "react-hot-toast";
 
 const Grades = () => {
   const [grades, setGrades] = useState([]);
@@ -15,6 +16,8 @@ const Grades = () => {
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState("");
   const [showModal, setShowModal] = useState(false);
+
+  const user = getCurrentUser();
 
   const fetchGrades = async () => {
     const res = await getGrades();
@@ -39,36 +42,43 @@ const Grades = () => {
 
   const handleFilterByClass = async (classId) => {
     setSelectedClass(classId);
-
     if (!classId) {
       fetchGrades();
       return;
     }
-
-    const res = await getGradesByClass(classId);
+    const selectedClassObj = classes.find((c) => c._id === classId);
+    if (!selectedClassObj) return;
+    const res = await getGradesByClass(selectedClassObj.name);
     setGrades(res.data.data || []);
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Supprimer cette note ?")) return;
-    await deleteGrade(id);
-    fetchGrades();
+    try {
+      await deleteGrade(id);
+      toast.success("Note supprimée");
+      fetchGrades();
+    } catch {
+      toast.error("Erreur lors de la suppression");
+    }
   };
+
+  const canEdit = user && (user.role === "Admin" || user.role === "Enseignant");
 
   return (
     <div className="p-6">
-      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Notes</h1>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-        >
-          + Ajouter une note
-        </button>
+        {canEdit && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+          >
+            + Ajouter une note
+          </button>
+        )}
       </div>
 
-      {/* FILTRE CLASSE */}
       <div className="mb-4">
         <select
           value={selectedClass}
@@ -84,7 +94,6 @@ const Grades = () => {
         </select>
       </div>
 
-      {/* TABLE */}
       <div className="overflow-x-auto bg-white rounded-lg shadow">
         <table className="min-w-full">
           <thead className="bg-gray-100">
@@ -112,16 +121,17 @@ const Grades = () => {
                 <td className="p-3">{g.examType}</td>
                 <td className="p-3">{g.term}</td>
                 <td className="p-3">
-                  <button
-                    onClick={() => handleDelete(g._id)}
-                    className="text-red-600 hover:underline"
-                  >
-                    Supprimer
-                  </button>
+                  {canEdit && (
+                    <button
+                      onClick={() => handleDelete(g._id)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Supprimer
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
-
             {grades.length === 0 && (
               <tr>
                 <td colSpan="7" className="p-6 text-center text-gray-500">
@@ -133,7 +143,6 @@ const Grades = () => {
         </table>
       </div>
 
-      {/* MODAL */}
       {showModal && (
         <AddEditGradeModal
           students={students}

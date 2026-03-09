@@ -1,5 +1,5 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
 import Layout from "./components/layout/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -12,17 +12,15 @@ import ClassDetails from "./pages/classes/ClassDetails";
 import Payments from "./pages/payments/Payments";
 import Grades from "./pages/grades/Grades";
 import Attendance from "./pages/attendance/Attendance";
-import Teachers from "./pages/teachers/Teachers"; 
+import Teachers from "./pages/teachers/Teachers";
 
 function App() {
   return (
     <Router>
+      <Toaster position="top-right" reverseOrder={false} />
       <Routes>
-
-        {/* PUBLIC */}
         <Route path="/login" element={<Login />} />
 
-        {/* DASHBOARD */}
         <Route
           path="/dashboard"
           element={
@@ -34,7 +32,6 @@ function App() {
           }
         />
 
-        {/* STUDENTS */}
         <Route
           path="/students"
           element={
@@ -46,7 +43,6 @@ function App() {
           }
         />
 
-        {/* CLASSES */}
         <Route
           path="/classes"
           element={
@@ -69,7 +65,6 @@ function App() {
           }
         />
 
-        {/* PAYMENTS */}
         <Route
           path="/payments"
           element={
@@ -81,7 +76,6 @@ function App() {
           }
         />
 
-        {/* GRADES */}
         <Route
           path="/grades"
           element={
@@ -93,7 +87,6 @@ function App() {
           }
         />
 
-        {/* ATTENDANCE */}
         <Route
           path="/attendance"
           element={
@@ -105,7 +98,6 @@ function App() {
           }
         />
 
-        {/* TEACHERS  */}
         <Route
           path="/teachers"
           element={
@@ -117,9 +109,7 @@ function App() {
           }
         />
 
-        {/* DEFAULT */}
         <Route path="*" element={<Navigate to="/dashboard" />} />
-
       </Routes>
     </Router>
   );

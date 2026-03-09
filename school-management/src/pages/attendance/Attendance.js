@@ -1,62 +1,53 @@
-
 import { useEffect, useState } from "react";
+import { getClasses } from "../../services/classService";
+import { getAttendance, markAttendance } from "../../services/attendanceService";
 import api from "../../api/axios";
+import toast from "react-hot-toast";
 
 const Attendance = () => {
   const [classes, setClasses] = useState([]);
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
   const [classId, setClassId] = useState("");
-  const [date, setDate] = useState(
-    new Date().toISOString().substring(0, 10)
-  );
+  const [date, setDate] = useState(new Date().toISOString().substring(0, 10));
 
-  
-  // CHARGER CLASSES
-  
   useEffect(() => {
-    api.get("/classes").then((res) => {
-      setClasses(res.data.data);
-    });
+    const fetchClasses = async () => {
+      const res = await getClasses();
+      setClasses(res.data.data || []);
+    };
+    fetchClasses();
   }, []);
 
-  
-  // CHARGER ÉLÈVES + PRÉSENCES
-  
   useEffect(() => {
     if (!classId || !date) return;
 
     const loadData = async () => {
-      const classRes = await api.get(`/classes/${classId}`);
-      setStudents(classRes.data.data.students);
+      try {
+        const classRes = await api.get(`/classes/${classId}`);
+        setStudents(classRes.data.data.students || []);
 
-      const attRes = await api.get(
-        `/attendance?classId=${classId}&date=${date}`
-      );
-
-      const map = {};
-      attRes.data.data.forEach((a) => {
-        map[a.student._id] = a.status;
-      });
-
-      setAttendance(map);
+        const attRes = await getAttendance(classId, date);
+        const map = {};
+        attRes.data.data.forEach((a) => {
+          map[a.student._id] = a.status;
+        });
+        setAttendance(map);
+      } catch {
+        toast.error("Erreur lors du chargement des présences");
+      }
     };
-
     loadData();
   }, [classId, date]);
 
- 
-  // MARQUER PRÉSENCE
-  
   const mark = async (studentId, status) => {
     setAttendance({ ...attendance, [studentId]: status });
-
-    await api.post("/attendance", {
-      student: studentId,
-      classId,
-      date,
-      status,
-    });
+    try {
+      await markAttendance({ student: studentId, classId, date, status });
+      toast.success("Présence mise à jour");
+    } catch {
+      toast.error("Erreur lors de l'enregistrement");
+    }
   };
 
   return (
@@ -67,7 +58,7 @@ const Attendance = () => {
         <select
           value={classId}
           onChange={(e) => setClassId(e.target.value)}
-          className="input"
+          className="border p-2 rounded"
         >
           <option value="">Sélectionner une classe</option>
           {classes.map((c) => (
@@ -81,7 +72,7 @@ const Attendance = () => {
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="input"
+          className="border p-2 rounded"
         />
       </div>
 
@@ -105,6 +96,7 @@ const Attendance = () => {
                   <td key={st} className="text-center">
                     <input
                       type="radio"
+                      name={`student-${s._id}`}
                       checked={attendance[s._id] === st}
                       onChange={() => mark(s._id, st)}
                     />

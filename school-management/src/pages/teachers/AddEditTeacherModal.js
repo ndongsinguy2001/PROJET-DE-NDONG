@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { createTeacher } from "../../services/teacherService";
+import toast from "react-hot-toast";
 
 const AddEditTeacherModal = ({ onClose, onSuccess }) => {
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -20,15 +22,15 @@ const AddEditTeacherModal = ({ onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
     try {
       await createTeacher(form);
+      toast.success("Enseignant ajouté avec succès");
       onSuccess();
     } catch (error) {
-      alert(
-        error.response?.data?.message ||
-          "Erreur lors de la création de l'enseignant"
-      );
+      toast.error(error.response?.data?.message || "Erreur lors de la création");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -123,11 +125,15 @@ const AddEditTeacherModal = ({ onClose, onSuccess }) => {
         />
 
         <div className="flex justify-end gap-3 mt-6">
-          <button type="button" onClick={onClose}>
+          <button type="button" onClick={onClose} className="px-4 py-2 border rounded">
             Annuler
           </button>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded">
-            Enregistrer
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            {loading ? "Enregistrement..." : "Enregistrer"}
           </button>
         </div>
       </form>

@@ -1,23 +1,18 @@
 import { Navigate } from "react-router-dom";
+import { getCurrentUser } from "../services/authService";
 
 const ProtectedRoute = ({ children, roles }) => {
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+  const user = getCurrentUser();
 
-  //  Pas connecté
-  if (!token || !role) {
-    localStorage.clear();
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  //  Rôle non autorisé
-  if (roles && !roles.includes(role)) {
+  if (roles && !roles.includes(user.role)) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  //  Autorisé
   return children;
 };
 
 export default ProtectedRoute;
-
