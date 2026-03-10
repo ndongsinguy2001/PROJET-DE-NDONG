@@ -18,7 +18,7 @@ const ClassDetails = () => {
 
   useEffect(() => {
     fetchClass();
-  }, [id]);
+  }, [id]); // ← dépendance ajoutée
 
   const handleRemoveStudent = async (studentId) => {
     if (!window.confirm("Retirer cet élève de la classe ?")) return;

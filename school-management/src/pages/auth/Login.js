@@ -14,7 +14,8 @@ const Login = () => {
     setLoading(true);
     try {
       const res = await api.post("/auth/login", { email, password });
-      const { token, role, ...userData } = res.data.data;
+      const { token, role } = res.data.data; // ← suppression de userData inutilisé
+
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
       localStorage.setItem("user", JSON.stringify(res.data.data));
