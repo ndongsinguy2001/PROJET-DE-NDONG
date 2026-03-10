@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { getClassById, removeStudentFromClass } from "../../services/classService";
 import AssignStudentModal from "./AssignStudentModal";
@@ -11,14 +11,14 @@ const ClassDetails = () => {
   const [showModal, setShowModal] = useState(false);
   const user = getCurrentUser();
 
-  const fetchClass = async () => {
+  const fetchClass = useCallback(async () => {
     const res = await getClassById(id);
     setClassData(res.data.data);
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchClass();
-  }, [id]); // ← dépendance ajoutée
+  }, [fetchClass]);
 
   const handleRemoveStudent = async (studentId) => {
     if (!window.confirm("Retirer cet élève de la classe ?")) return;
